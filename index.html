@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DG Bienestar y Belleza · Diana Gisel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-brand">
+      <span class="nav-logo">DG Bienestar y Belleza</span>
+      <span class="nav-tag">Fisioterapia & Estética</span>
+    </div>
+    <div class="nav-links">
+      <a href="#fisioterapia">Fisioterapia</a>
+      <a href="#estetica">Laminado & Rizado</a>
+      <a href="#disponibilidad">Disponibilidad</a>
+      <a href="#agendar" class="btn-nav">Agendar cita</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Abrir menú">&#9776;</button>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-text">
+      <p class="hero-eyebrow">Fisioterapeuta particular en Tepic, Nayarit</p>
+      <h1>Tu bienestar<br/>en <em>buenas<br/>manos.</em></h1>
+      <p class="hero-sub">Atención personalizada en fisioterapia y servicios de estética facial con Diana Gisel. Agenda tu cita de forma fácil y rápida.</p>
+      <div class="hero-btns">
+        <a href="#agendar" class="btn-primary">Reservar cita →</a>
+        <a href="#fisioterapia" class="btn-outline">Ver servicios</a>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-card">
+        <div class="brand-badge">
+          <span class="brand-initials">DG</span>
+          <div>
+            <p class="brand-name">DG Bienestar y Belleza</p>
+            <p class="brand-city">Tepic, Nayarit</p>
+          </div>
+        </div>
+        <hr class="card-divider" />
+        <div class="hc-row">
+          <span class="hc-dot green"></span>
+          <span class="hc-label">Disponible hoy</span>
+        </div>
+        <p class="hc-time">Próxima cita libre</p>
+        <p class="hc-hour" id="nextSlotHero">—</p>
+        <a href="#agendar" class="btn-pill">Ver horarios</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FISIOTERAPIA -->
+  <section class="section" id="fisioterapia">
+    <p class="section-eyebrow">Rehabilitación · Dolor · Movimiento</p>
+    <h2 class="section-title">Fisioterapia particular</h2>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">🛡️</div>
+        <h3>Prevención de dolores y recuperación de lesiones</h3>
+        <p>Programas preventivos y de recuperación funcional para evitar recaídas y volver a la actividad diaria con seguridad.</p>
+        <span class="service-duration">1 hora</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🔻</div>
+        <h3>Dolor lumbar</h3>
+        <p>Evaluación y tratamiento del dolor de espalda baja, hernias discales, contracturas y problemas posturales de la zona lumbar.</p>
+        <span class="service-duration">1 hora</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🤕</div>
+        <h3>Dolor en cuello y hombros</h3>
+        <p>Tratamiento de cervicalgias, tortícolis, tensión muscular, síndrome del manguito rotador y dolor irradiado al brazo.</p>
+        <span class="service-duration">1 hora</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🤲</div>
+        <h3>Terapia manual</h3>
+        <p>Técnicas de movilización articular, manipulación vertebral y tejidos blandos para restaurar la movilidad y reducir el dolor.</p>
+        <span class="service-duration">1 hora</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🏋️</div>
+        <h3>Ejercicio terapéutico</h3>
+        <p>Rutinas de fortalecimiento, estiramiento y reentrenamiento neuromuscular adaptadas a cada paciente y etapa de recuperación.</p>
+        <span class="service-duration">1 hora</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🦶</div>
+        <h3>Esguinces</h3>
+        <p>Rehabilitación de esguinces de tobillo, rodilla, muñeca y otras articulaciones con protocolo de recuperación progresivo.</p>
+        <span class="service-duration">1 hora</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">😶</div>
+        <h3>Parálisis facial</h3>
+        <p>Fisioterapia especializada en parálisis de Bell y otras afecciones del nervio facial: electroterapia, masaje y ejercicios de reeducación.</p>
+        <span class="service-duration">1 hora</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">💆</div>
+        <h3>Masaje terapéutico, relajante y descontracturante</h3>
+        <p>Masaje de tejido profundo para aliviar contracturas, liberar tensión acumulada y promover la recuperación muscular.</p>
+        <span class="service-duration">1 hora</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ESTÉTICA -->
+  <section class="section alt" id="estetica">
+    <p class="section-eyebrow">Rostro · Expresión · Detalle</p>
+    <h2 class="section-title">Laminado & Rizado</h2>
+    <div class="services-grid">
+      <div class="service-card beauty">
+        <div class="service-icon">🌿</div>
+        <h3>Laminado de cejas</h3>
+        <p>Reestructuración del vello de las cejas para darles forma, volumen y fijación duradera. Efecto natural y definido.</p>
+        <span class="service-duration beauty-tag">Estética</span>
+      </div>
+      <div class="service-card beauty">
+        <div class="service-icon">✏️</div>
+        <h3>Visagismo</h3>
+        <p>Diseño y mapeado de cejas adaptado a la forma del rostro para lograr una expresión armónica y equilibrada.</p>
+        <span class="service-duration beauty-tag">Estética</span>
+      </div>
+      <div class="service-card beauty">
+        <div class="service-icon">🎨</div>
+        <h3>Pigmento</h3>
+        <p>Aplicación de pigmento semipermanente en cejas para definir el color, llenar espacios y mejorar la simetría.</p>
+        <span class="service-duration beauty-tag">Estética</span>
+      </div>
+      <div class="service-card beauty">
+        <div class="service-icon">🪒</div>
+        <h3>Depilación con pinza o navaja</h3>
+        <p>Depilación de precisión para modelar y perfilar las cejas, eliminando el vello no deseado con máxima delicadeza.</p>
+        <span class="service-duration beauty-tag">Estética</span>
+      </div>
+      <div class="service-card beauty">
+        <div class="service-icon">👁️</div>
+        <h3>Rizado de pestañas</h3>
+        <p>Técnica de lifting y rizado permanente de pestañas para lograr una mirada más abierta y expresiva sin necesidad de rimel.</p>
+        <span class="service-duration beauty-tag">Estética</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- DISPONIBILIDAD -->
+  <section class="section" id="disponibilidad">
+    <p class="section-eyebrow">Calendario</p>
+    <h2 class="section-title">Disponibilidad</h2>
+    <div class="schedule-info">
+      <div class="schedule-badge">🗓️ Lun – Vie &nbsp;|&nbsp; 4:00 PM – 8:00 PM</div>
+      <div class="schedule-badge">🗓️ Sáb – Dom &nbsp;|&nbsp; 9:00 AM – 8:00 PM</div>
+    </div>
+    <div class="calendar-wrap">
+      <div class="cal-header">
+        <button class="cal-nav" id="prevMonth">‹</button>
+        <span class="cal-month" id="calMonthLabel"></span>
+        <button class="cal-nav" id="nextMonth">›</button>
+      </div>
+      <div class="cal-days-header">
+        <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-legend">
+        <span><span class="dot green"></span> Disponible</span>
+        <span><span class="dot yellow"></span> Casi lleno</span>
+        <span><span class="dot red"></span> Sin citas</span>
+        <span><span class="dot gray"></span> Cerrado</span>
+      </div>
+    </div>
+    <div class="slots-wrap" id="slotsWrap">
+      <p class="slots-title" id="slotsTitle">Selecciona un día para ver horarios</p>
+      <div class="slots-grid" id="slotsGrid"></div>
+    </div>
+  </section>
+
+  <!-- FORMULARIO -->
+  <section class="section alt" id="agendar">
+    <p class="section-eyebrow">Reserva</p>
+    <h2 class="section-title">Agenda tu cita</h2>
+    <form class="appt-form" id="apptForm" novalidate>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="nombre">Nombre completo *</label>
+          <input type="text" id="nombre" placeholder="Ej: María López" required />
+        </div>
+        <div class="form-group">
+          <label for="tel">WhatsApp *</label>
+          <input type="tel" id="tel" placeholder="+52 311 123 4567" required />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="categoria">Categoría *</label>
+          <select id="categoria" required>
+            <option value="">— Fisioterapia o Estética —</option>
+            <option value="fisio">Fisioterapia</option>
+            <option value="estetica">Laminado & Rizado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="servicio">Servicio específico *</label>
+          <select id="servicio" required>
+            <option value="">— Primero elige categoría —</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="fecha">Fecha *</label>
+          <input type="date" id="fecha" required />
+        </div>
+        <div class="form-group">
+          <label for="hora">Horario *</label>
+          <select id="hora" required>
+            <option value="">— Selecciona hora —</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group full-width">
+          <label for="motivo">Comentarios adicionales</label>
+          <input type="text" id="motivo" placeholder="Síntomas, indicaciones, dudas… (opcional)" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn-primary btn-full" id="submitBtn">
+          Confirmar cita vía WhatsApp →
+        </button>
+      </div>
+    </form>
+    <p class="form-note">Al confirmar, se abrirá WhatsApp con el resumen de tu cita para que Diana lo apruebe. Tu solicitud queda registrada al instante.</p>
+  </section>
+
+  <!-- PANEL TERAPEUTA (protegido con PIN) -->
+  <section class="section" id="miscitas">
+    <p class="section-eyebrow">Área privada</p>
+    <h2 class="section-title">Panel de Diana</h2>
+
+    <div id="loginPanel" class="login-panel">
+      <p class="login-desc">Esta sección es exclusiva para Diana Gisel. Ingresa tu PIN para ver las citas agendadas.</p>
+      <div class="pin-wrap">
+        <input type="password" id="pinInput" placeholder="Ingresa tu PIN" maxlength="6" />
+        <button class="btn-primary" id="pinBtn">Entrar</button>
+      </div>
+      <p class="pin-error hidden" id="pinError">PIN incorrecto. Intenta de nuevo.</p>
+    </div>
+
+    <div id="citasPanel" class="hidden">
+      <div class="panel-toolbar">
+        <p class="panel-welcome">Bienvenida, Diana 👋</p>
+        <button class="btn-logout" id="logoutBtn">Cerrar sesión</button>
+      </div>
+      <div id="appointmentsList">
+        <p class="empty-state">Aún no hay citas agendadas.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <p class="footer-name">DG Bienestar y Belleza</p>
+        <p class="footer-sub">Diana Gisel · Fisioterapeuta particular</p>
+        <p class="footer-address">📍 Tepic, Nayarit, México</p>
+      </div>
+      <div class="footer-contact">
+        <a href="https://wa.me/523312345678" target="_blank" class="btn-wa">
+          <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.106.548 4.083 1.508 5.797L0 24l6.334-1.482A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.854 0-3.6-.498-5.112-1.369l-.366-.218-3.762.88.924-3.672-.24-.378A9.935 9.935 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+          Escríbeme
+        </a>
+      </div>
+    </div>
+    <p class="footer-copy">© 2025 DG Bienestar y Belleza · Diana Gisel · Tepic, Nayarit · Todos los derechos reservados</p>
+  </footer>
+
+  <div id="toast" class="toast hidden"></div>
+  <script src="app.js"></script>
+</body>
+</html>
