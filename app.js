@@ -2,7 +2,7 @@
 const CONFIG = {
   nombreFisio: "Diana Gisel",
   negocio: "DG Bienestar y Belleza",
-  whatsapp: "523312345678",          // Número de Diana: código país + número sin + ni espacios
+  whatsapp: "523112685690",          // Número de Diana: código país + número sin + ni espacios
   duracionMin: 60,                   // 1 hora por cita
 
   // Horario según día de la semana
