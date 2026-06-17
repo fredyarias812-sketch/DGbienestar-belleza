@@ -604,6 +604,79 @@ body {
 /* ===== HIDDEN ===== */
 .hidden { display: none !important; }
 
+/* ===== PANEL DE BLOQUEO DE DÍAS ===== */
+.panel-block {
+  background: var(--sand);
+  border: 1px solid var(--sand-dark);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  max-width: 680px;
+  margin-bottom: 1.5rem;
+}
+.panel-block-title {
+  font-size: 14px; font-weight: 600;
+  color: var(--text); margin-bottom: .4rem;
+}
+.panel-block-subtitle {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-muted); margin: 1rem 0 .5rem;
+}
+.panel-block-desc {
+  font-size: 13px; color: var(--text-muted);
+  margin-bottom: 1.25rem; line-height: 1.6;
+}
+
+.mini-cal-wrap {
+  background: var(--white);
+  border: 1px solid #e0e0e0;
+  border-radius: var(--radius-sm);
+  padding: 1rem;
+  max-width: 380px;
+  margin-bottom: 1rem;
+}
+
+.mini-cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.mini-cal-day {
+  aspect-ratio: 1;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background .15s;
+}
+.mini-cal-day:hover:not(.mini-past) { background: var(--sage-light); border-color: var(--sage-mid); }
+.mini-cal-day.empty { cursor: default; }
+.mini-cal-day.mini-past { color: var(--text-light); cursor: default; font-size: 11px; }
+.mini-cal-day.mini-bloq {
+  background: #fee2e2;
+  color: var(--red);
+  font-weight: 600;
+  border-color: #fca5a5;
+}
+.mini-cal-day.mini-bloq:hover { background: #fecaca; }
+
+.dia-bloq-item {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  padding: 8px 14px;
+  margin-bottom: 8px;
+  font-size: 13px; color: var(--red);
+}
+.btn-reactivar {
+  background: var(--white); border: 1px solid #fca5a5;
+  color: var(--red); padding: 4px 12px;
+  border-radius: 6px; font-size: 12px; cursor: pointer;
+  transition: background .2s;
+}
+.btn-reactivar:hover { background: #fee2e2; }
+
 /* ===== RESPONSIVE ===== */
 @media (max-width: 768px) {
   .nav-links { display: none; }
