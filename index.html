@@ -260,6 +260,35 @@
         <p class="panel-welcome">Bienvenida, Diana 👋</p>
         <button class="btn-logout" id="logoutBtn">Cerrar sesión</button>
       </div>
+
+      <!-- BLOQUEO DE DÍAS -->
+      <div class="panel-block">
+        <p class="panel-block-title">📅 Gestionar disponibilidad</p>
+        <p class="panel-block-desc">Haz clic en un día para desactivarlo o reactivarlo. Los días bloqueados aparecerán como "Cerrado" para tus pacientes.</p>
+        <div class="mini-cal-wrap">
+          <div class="cal-header">
+            <button class="cal-nav" id="miniPrevMonth">‹</button>
+            <span class="cal-month" id="miniCalLabel"></span>
+            <button class="cal-nav" id="miniNextMonth">›</button>
+          </div>
+          <div class="cal-days-header">
+            <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+          </div>
+          <div class="mini-cal-grid" id="miniCalGrid"></div>
+          <div class="cal-legend" style="margin-top:.75rem">
+            <span><span class="dot green"></span> Disponible</span>
+            <span><span class="dot red"></span> Bloqueado</span>
+            <span><span class="dot gray"></span> Sin horario</span>
+          </div>
+        </div>
+        <p class="panel-block-subtitle">Días bloqueados próximos:</p>
+        <div id="diasDesactivadosWrap">
+          <p class="empty-state" style="font-size:13px;">Ningún día bloqueado próximamente.</p>
+        </div>
+      </div>
+
+      <!-- CITAS -->
+      <p class="panel-block-title" style="margin-top:2rem;">🗂️ Citas agendadas</p>
       <div id="appointmentsList">
         <p class="empty-state">Aún no hay citas agendadas.</p>
       </div>
