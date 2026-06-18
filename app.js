@@ -9,7 +9,7 @@ const CONFIG = {
   pin         : "0922",
 
   // ↓ Pega aquí la URL del Web App de Google Apps Script
-  sheetURL: "https://script.google.com/macros/s/AKfycbyDWNlJ9JukghKlBc4xlUiSHNcDvuoVygEBNkDSElQXDFBcOp-rjEJqPc7yEpFayLwudQ/exec",
+  sheetURL:"https://script.google.com/macros/s/AKfycbyDWNlJ9JukghKlBc4xlUiSHNcDvuoVygEBNkDSElQXDFBcOp-rjEJqPc7yEpFayLwudQ/exec"
 
   horarios: {
     0: [9, 20],   // Domingo   9am–8pm
