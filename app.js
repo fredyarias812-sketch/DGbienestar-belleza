@@ -6,8 +6,8 @@ const CONFIG = {
   negocio     : "DG Bienestar y Belleza",
   whatsapp    : "523312345678",  // ← número real de Diana (52 + 10 dígitos sin espacios)
   duracionMin : 60,
-  pin         :"0922",
-  // Pega aquí la URL del Web App de Google Apps Script:
+  pin         : "0922",
+  // ↓ Pega aquí la URL del Web App de Google Apps Script
   sheetURL    :"https://script.google.com/macros/s/AKfycbyDWNlJ9JukghKlBc4xlUiSHNcDvuoVygEBNkDSElQXDFBcOp-rjEJqPc7yEpFayLwudQ/exec",
   horarios: {
     0: [9,  20],   // Domingo   9am–8pm
@@ -41,7 +41,7 @@ const SERVICIOS = {
 };
 
 // ╔══════════════════════════════════════════════════════╗
-// ║  ESTADO GLOBAL                                      ║
+// ║  ESTADO                                             ║
 // ╚══════════════════════════════════════════════════════╝
 let appointments   = [];
 let diasBloqueados = new Set();
@@ -50,17 +50,31 @@ let selectedDate   = null;
 let isLoggedIn     = false;
 
 // ╔══════════════════════════════════════════════════════╗
-// ║  API GOOGLE SHEETS                                  ║
+// ║  API — POST para todo, GET solo para leer           ║
 // ╚══════════════════════════════════════════════════════╝
-async function apiCall(params) {
+async function apiPOST(payload) {
   if (!CONFIG.sheetURL) return null;
   try {
-    const url = CONFIG.sheetURL + "?" + new URLSearchParams(params).toString();
-    const res = await fetch(url, { method: "GET" });
+    const res = await fetch(CONFIG.sheetURL, {
+      method : "POST",
+      body   : JSON.stringify(payload),
+    });
     const text = await res.text();
     return JSON.parse(text);
   } catch (err) {
-    console.warn("API error:", err);
+    console.warn("POST error:", err);
+    return null;
+  }
+}
+
+async function apiGET() {
+  if (!CONFIG.sheetURL) return null;
+  try {
+    const res  = await fetch(CONFIG.sheetURL);
+    const text = await res.text();
+    return JSON.parse(text);
+  } catch (err) {
+    console.warn("GET error:", err);
     return null;
   }
 }
@@ -68,13 +82,16 @@ async function apiCall(params) {
 async function cargarDatos() {
   mostrarCargando(true);
   try {
-    const res = await apiCall({ action: "getAll" });
+    // GET para leer (más simple, sin body)
+    const res = await apiGET();
     if (res && res.ok) {
-      appointments   = Array.isArray(res.citas) ? res.citas.map(c => ({ ...c, id: Number(c.id) || c.id })) : [];
+      appointments   = Array.isArray(res.citas)
+        ? res.citas.map(function(c) { return Object.assign({}, c, { id: Number(c.id) || c.id }); })
+        : [];
       diasBloqueados = new Set(Array.isArray(res.bloqueados) ? res.bloqueados : []);
     }
   } catch (err) {
-    console.warn("cargarDatos error:", err);
+    console.warn("cargarDatos:", err);
   }
   mostrarCargando(false);
   renderCalendar();
@@ -86,24 +103,6 @@ async function cargarDatos() {
   }
 }
 
-async function guardarCita(cita) {
-  try {
-    return await apiCall({ action: "addCita", cita: JSON.stringify(cita) });
-  } catch (e) { return null; }
-}
-
-async function eliminarCitaAPI(id) {
-  try {
-    return await apiCall({ action: "deleteCita", id: String(id) });
-  } catch (e) { return null; }
-}
-
-async function toggleBloqueoAPI(dateKey, estabaBloqueado) {
-  try {
-    return await apiCall({ action: "toggleBloqueo", dateKey, bloqueado: String(estabaBloqueado) });
-  } catch (e) { return null; }
-}
-
 // ╔══════════════════════════════════════════════════════╗
 // ║  UTILIDADES                                         ║
 // ╚══════════════════════════════════════════════════════╝
@@ -112,81 +111,76 @@ function getDateKey(d) {
     String(d.getMonth() + 1).padStart(2, "0") + "-" +
     String(d.getDate()).padStart(2, "0");
 }
-
 function parseDateKey(k) {
-  const p = k.split("-");
+  var p = String(k).split("-");
   return new Date(+p[0], +p[1] - 1, +p[2]);
 }
-
 function formatDate(k) {
   try {
     return parseDateKey(k).toLocaleDateString("es-MX", {
       weekday: "long", year: "numeric", month: "long", day: "numeric"
     });
-  } catch (e) { return k; }
+  } catch(e) { return k; }
 }
-
 function getSlotsForDay(dow) {
-  const h = CONFIG.horarios[dow];
+  var h = CONFIG.horarios[dow];
   if (!h) return [];
-  const slots = [];
-  let hr = h[0], mn = 0;
+  var slots = [], hr = h[0], mn = 0;
   while (hr < h[1]) {
-    slots.push(String(hr).padStart(2, "0") + ":" + String(mn).padStart(2, "0"));
+    slots.push(String(hr).padStart(2,"0") + ":" + String(mn).padStart(2,"0"));
     mn += CONFIG.duracionMin;
     if (mn >= 60) { hr += Math.floor(mn / 60); mn %= 60; }
   }
   return slots;
 }
-
 function getSlotsForDate(key) {
-  const all   = getSlotsForDay(parseDateKey(key).getDay());
-  const taken = appointments.filter(a => String(a.fecha) === key).map(a => String(a.hora));
-  return all.map(t => ({ time: t, taken: taken.includes(t) }));
+  var all   = getSlotsForDay(parseDateKey(key).getDay());
+  var taken = appointments
+    .filter(function(a) { return String(a.fecha) === String(key); })
+    .map(function(a) { return String(a.hora); });
+  return all.map(function(t) { return { time: t, taken: taken.indexOf(t) !== -1 }; });
 }
-
 function getDayStatus(date) {
-  const key = getDateKey(date);
+  var key = getDateKey(date);
   if (diasBloqueados.has(key)) return "closed";
-  const all = getSlotsForDay(date.getDay());
+  var all = getSlotsForDay(date.getDay());
   if (!all.length) return "closed";
-  const taken = appointments.filter(a => String(a.fecha) === key).length;
-  if (taken === 0)             return "available";
+  var taken = appointments.filter(function(a) { return String(a.fecha) === key; }).length;
+  if (taken === 0)            return "available";
   if (taken < all.length * .7) return "available";
-  if (taken < all.length)      return "partial";
+  if (taken < all.length)     return "partial";
   return "full";
 }
-
 function toast(msg, type) {
-  const el = document.getElementById("toast");
+  var el = document.getElementById("toast");
   if (!el) return;
   el.textContent = msg;
   el.className = "toast" + (type ? " " + type : "");
-  setTimeout(() => { el.className = "toast hidden"; }, 3500);
+  setTimeout(function() { el.className = "toast hidden"; }, 3500);
 }
-
 function mostrarCargando(show) {
-  const el = document.getElementById("loadingOverlay");
+  var el = document.getElementById("loadingOverlay");
   if (el) el.style.display = show ? "flex" : "none";
 }
-
 function setNextSlot() {
-  const el = document.getElementById("nextSlotHero");
+  var el = document.getElementById("nextSlotHero");
   if (!el) return;
-  const now = new Date();
-  for (let i = 0; i < 30; i++) {
-    const d = new Date(now);
+  var now = new Date();
+  for (var i = 0; i < 30; i++) {
+    var d = new Date(now);
     d.setDate(d.getDate() + i);
-    const key = getDateKey(d);
+    var key = getDateKey(d);
     if (diasBloqueados.has(key)) continue;
-    const all = getSlotsForDay(d.getDay());
+    var all = getSlotsForDay(d.getDay());
     if (!all.length) continue;
-    const taken = appointments.filter(a => String(a.fecha) === key).map(a => String(a.hora));
-    const free  = all.filter(s => !taken.includes(s));
+    var taken = appointments
+      .filter(function(a) { return String(a.fecha) === key; })
+      .map(function(a) { return String(a.hora); });
+    var free = all.filter(function(s) { return taken.indexOf(s) === -1; });
     if (free.length) {
       el.textContent = i === 0
         ? "Hoy · " + free[0]
-        : d.toLocaleDateString("es-MX", { weekday: "short", month: "short", day: "numeric" }) + " · " + free[0];
+        : d.toLocaleDateString("es-MX", { weekday:"short", month:"short", day:"numeric" }) + " · " + free[0];
       return;
     }
   }
@@ -196,49 +190,49 @@ function setNextSlot() {
 // ╔══════════════════════════════════════════════════════╗
 // ║  CALENDARIO PÚBLICO                                 ║
 // ╚══════════════════════════════════════════════════════╝
-const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+var MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
 
 function renderCalendar() {
-  const grid  = document.getElementById("calGrid");
-  const label = document.getElementById("calMonthLabel");
+  var grid  = document.getElementById("calGrid");
+  var label = document.getElementById("calMonthLabel");
   if (!grid || !label) return;
   grid.innerHTML = "";
 
-  const y   = viewDate.getFullYear();
-  const mo  = viewDate.getMonth();
-  const today = new Date(); today.setHours(0, 0, 0, 0);
+  var y   = viewDate.getFullYear();
+  var mo  = viewDate.getMonth();
+  var today = new Date(); today.setHours(0,0,0,0);
   label.textContent = MESES[mo] + " " + y;
 
-  const firstDay    = new Date(y, mo, 1).getDay();
-  const daysInMonth = new Date(y, mo + 1, 0).getDate();
+  var firstDay    = new Date(y, mo, 1).getDay();
+  var daysInMonth = new Date(y, mo+1, 0).getDate();
 
-  for (let i = 0; i < firstDay; i++) {
-    const el = document.createElement("div");
-    el.className = "cal-day empty";
-    grid.appendChild(el);
+  for (var i = 0; i < firstDay; i++) {
+    var emp = document.createElement("div");
+    emp.className = "cal-day empty";
+    grid.appendChild(emp);
   }
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = new Date(y, mo, d);
-    const key  = getDateKey(date);
-    const el   = document.createElement("div");
-    el.textContent = d;
-    el.className = "cal-day";
-
-    if (date < today) {
-      el.classList.add("past");
-    } else {
-      const st = getDayStatus(date);
-      if (st === "closed") {
-        el.classList.add("closed");
+  for (var d = 1; d <= daysInMonth; d++) {
+    (function(day) {
+      var date = new Date(y, mo, day);
+      var key  = getDateKey(date);
+      var el   = document.createElement("div");
+      el.textContent = day;
+      el.className = "cal-day";
+      if (date < today) {
+        el.classList.add("past");
       } else {
-        el.classList.add(st === "full" ? "full" : st === "partial" ? "partial" : "available");
-        el.addEventListener("click", function() { selectDay(date, key); });
+        var st = getDayStatus(date);
+        if (st === "closed") {
+          el.classList.add("closed");
+        } else {
+          el.classList.add(st === "full" ? "full" : st === "partial" ? "partial" : "available");
+          el.addEventListener("click", function() { selectDay(date, key); });
+        }
       }
-    }
-    if (date.toDateString() === today.toDateString()) el.classList.add("today");
-    if (selectedDate && key === selectedDate) el.classList.add("selected");
-    grid.appendChild(el);
+      if (date.toDateString() === today.toDateString()) el.classList.add("today");
+      if (selectedDate && key === selectedDate) el.classList.add("selected");
+      grid.appendChild(el);
+    })(d);
   }
 }
 
@@ -246,36 +240,32 @@ function selectDay(date, key) {
   selectedDate = key;
   renderCalendar();
   renderSlots(date, key);
-  const fechaInput = document.getElementById("fecha");
-  if (fechaInput) fechaInput.value = key;
+  var fi = document.getElementById("fecha");
+  if (fi) fi.value = key;
 }
 
 function renderSlots(date, key) {
-  const wrap  = document.getElementById("slotsWrap");
-  const title = document.getElementById("slotsTitle");
-  const grid  = document.getElementById("slotsGrid");
-  const sel   = document.getElementById("hora");
+  var wrap  = document.getElementById("slotsWrap");
+  var title = document.getElementById("slotsTitle");
+  var grid  = document.getElementById("slotsGrid");
+  var sel   = document.getElementById("hora");
   if (!wrap || !title || !grid || !sel) return;
 
-  title.textContent = date.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long" });
+  title.textContent = date.toLocaleDateString("es-MX", { weekday:"long", day:"numeric", month:"long" });
   grid.innerHTML = "";
   sel.innerHTML  = '<option value="">— Selecciona hora —</option>';
 
   if (diasBloqueados.has(key)) {
     grid.innerHTML = '<p style="color:var(--red);font-size:14px;font-weight:500;">⛔ Este día no está disponible.</p>';
-    wrap.style.display = "block";
-    return;
+    wrap.style.display = "block"; return;
   }
-
-  const slots = getSlotsForDate(key);
+  var slots = getSlotsForDate(key);
   if (!slots.length) {
     grid.innerHTML = '<p style="color:var(--text-muted);font-size:14px;">No hay horario disponible este día.</p>';
-    wrap.style.display = "block";
-    return;
+    wrap.style.display = "block"; return;
   }
-
   slots.forEach(function(s) {
-    const btn = document.createElement("button");
+    var btn = document.createElement("button");
     btn.type = "button";
     btn.textContent = s.time;
     btn.className = "slot-btn" + (s.taken ? " taken" : "");
@@ -284,15 +274,14 @@ function renderSlots(date, key) {
         document.querySelectorAll(".slot-btn").forEach(function(b) { b.classList.remove("selected"); });
         btn.classList.add("selected");
         sel.value = s.time;
-        document.getElementById("agendar").scrollIntoView({ behavior: "smooth", block: "start" });
+        document.getElementById("agendar").scrollIntoView({ behavior:"smooth", block:"start" });
       });
-      const opt = document.createElement("option");
+      var opt = document.createElement("option");
       opt.value = s.time; opt.textContent = s.time;
       sel.appendChild(opt);
     }
     grid.appendChild(btn);
   });
-
   wrap.style.display = "block";
 }
 
@@ -300,18 +289,15 @@ function renderSlots(date, key) {
 // ║  SERVICIOS DINÁMICOS                                ║
 // ╚══════════════════════════════════════════════════════╝
 document.getElementById("categoria").addEventListener("change", function() {
-  const s = document.getElementById("servicio");
+  var s = document.getElementById("servicio");
   s.innerHTML = '<option value="">— Elige un servicio —</option>';
-  const lista = SERVICIOS[this.value] || [];
-  lista.forEach(function(v) {
-    const o = document.createElement("option");
-    o.value = v; o.textContent = v;
-    s.appendChild(o);
+  (SERVICIOS[this.value] || []).forEach(function(v) {
+    var o = document.createElement("option"); o.value = v; o.textContent = v; s.appendChild(o);
   });
 });
 
 // ╔══════════════════════════════════════════════════════╗
-// ║  FORMULARIO AGENDAR                                 ║
+// ║  FORMULARIO                                         ║
 // ╚══════════════════════════════════════════════════════╝
 function buildWAMessage(a) {
   return encodeURIComponent(
@@ -319,7 +305,7 @@ function buildWAMessage(a) {
     "Nueva solicitud de cita:\n\n" +
     "👤 *Nombre:* " + a.nombre + "\n" +
     "📱 *WhatsApp:* " + a.tel + "\n" +
-    "📅 *Fecha:* " + formatDate(a.fecha) + "\n" +
+    "📅 *Fecha:* " + formatDate(String(a.fecha)) + "\n" +
     "🕐 *Hora:* " + a.hora + "\n" +
     "🗂️ *Categoría:* " + (a.categoria === "fisio" ? "Fisioterapia" : "Laminado & Rizado") + "\n" +
     "🩺 *Servicio:* " + a.servicio + "\n" +
@@ -330,51 +316,44 @@ function buildWAMessage(a) {
 
 document.getElementById("apptForm").addEventListener("submit", async function(e) {
   e.preventDefault();
-
-  const nombre    = document.getElementById("nombre").value.trim();
-  const tel       = document.getElementById("tel").value.trim();
-  const categoria = document.getElementById("categoria").value;
-  const servicio  = document.getElementById("servicio").value;
-  const fecha     = document.getElementById("fecha").value;
-  const hora      = document.getElementById("hora").value;
-  const motivo    = document.getElementById("motivo").value.trim();
+  var nombre    = document.getElementById("nombre").value.trim();
+  var tel       = document.getElementById("tel").value.trim();
+  var categoria = document.getElementById("categoria").value;
+  var servicio  = document.getElementById("servicio").value;
+  var fecha     = document.getElementById("fecha").value;
+  var hora      = document.getElementById("hora").value;
+  var motivo    = document.getElementById("motivo").value.trim();
 
   if (!nombre || !tel || !categoria || !servicio || !fecha || !hora) {
-    toast("Completa todos los campos obligatorios.", "error");
-    return;
+    toast("Completa todos los campos obligatorios.", "error"); return;
   }
   if (diasBloqueados.has(fecha)) {
-    toast("Ese día no está disponible. Elige otra fecha.", "error");
-    return;
+    toast("Ese día no está disponible. Elige otra fecha.", "error"); return;
   }
 
-  const btn = document.getElementById("submitBtn");
-  btn.disabled = true;
-  btn.textContent = "Guardando…";
+  var btn = document.getElementById("submitBtn");
+  btn.disabled = true; btn.textContent = "Guardando…";
 
-  const cita = {
-    id      : Date.now(),
-    nombre  : nombre,
-    tel     : tel,
-    categoria: categoria,
-    servicio: servicio,
-    fecha   : fecha,
-    hora    : hora,
-    motivo  : motivo,
-    creada  : new Date().toISOString()
+  var cita = {
+    id: Date.now(), nombre: nombre, tel: tel, categoria: categoria,
+    servicio: servicio, fecha: fecha, hora: hora, motivo: motivo,
+    creada: new Date().toISOString()
   };
 
   if (CONFIG.sheetURL) {
-    const res = await guardarCita(cita);
+    var res = await apiPOST({ action: "addCita", cita: cita });
     if (res && res.ok) {
-      toast("¡Cita guardada! Se verá en todos los dispositivos ✓", "success");
+      toast("¡Cita guardada! Visible en todos los dispositivos ✓", "success");
     } else {
-      toast("Revisa tu conexión. La cita se guardó localmente.", "");
+      toast("Error al guardar. Intenta de nuevo.", "error");
+      btn.disabled = false; btn.textContent = "Confirmar cita vía WhatsApp →";
+      return;
     }
   } else {
-    toast("Cita registrada. (Configura sheetURL para sincronizar)", "");
+    toast("Cita registrada localmente. Configura sheetURL para sincronizar.", "");
   }
 
+  // Actualizar estado local inmediatamente
   appointments.push(cita);
   window.open("https://wa.me/" + CONFIG.whatsapp + "?text=" + buildWAMessage(cita), "_blank");
 
@@ -384,32 +363,27 @@ document.getElementById("apptForm").addEventListener("submit", async function(e)
   setNextSlot();
   if (isLoggedIn) renderAppointments();
 
-  btn.disabled = false;
-  btn.textContent = "Confirmar cita vía WhatsApp →";
+  btn.disabled = false; btn.textContent = "Confirmar cita vía WhatsApp →";
 });
 
 // ╔══════════════════════════════════════════════════════╗
 // ║  PANEL DIANA — PIN                                  ║
 // ╚══════════════════════════════════════════════════════╝
 function checkPin() {
-  const input = document.getElementById("pinInput");
-  const error = document.getElementById("pinError");
+  var input = document.getElementById("pinInput");
+  var error = document.getElementById("pinError");
   if (!input) return;
-
   if (input.value === CONFIG.pin) {
     isLoggedIn = true;
     document.getElementById("loginPanel").classList.add("hidden");
     document.getElementById("citasPanel").classList.remove("hidden");
-    renderAppointments();
-    renderDiasBloqueados();
-    renderMiniCal();
+    // Recargar datos frescos al entrar al panel
+    cargarDatos();
   } else {
     if (error) error.classList.remove("hidden");
-    input.value = "";
-    input.focus();
+    input.value = ""; input.focus();
   }
 }
-
 document.getElementById("pinBtn").addEventListener("click", checkPin);
 document.getElementById("pinInput").addEventListener("keydown", function(e) {
   if (e.key === "Enter") checkPin();
@@ -419,7 +393,7 @@ document.getElementById("logoutBtn").addEventListener("click", function() {
   document.getElementById("citasPanel").classList.add("hidden");
   document.getElementById("loginPanel").classList.remove("hidden");
   document.getElementById("pinInput").value = "";
-  const err = document.getElementById("pinError");
+  var err = document.getElementById("pinError");
   if (err) err.classList.add("hidden");
 });
 
@@ -427,7 +401,9 @@ document.getElementById("logoutBtn").addEventListener("click", function() {
 // ║  BLOQUEO DE DÍAS                                    ║
 // ╚══════════════════════════════════════════════════════╝
 async function handleToggleBloqueo(key) {
-  const estaba = diasBloqueados.has(key);
+  var estaba = diasBloqueados.has(key);
+
+  // 1. Actualiza estado local inmediatamente (UI responsiva)
   if (estaba) diasBloqueados.delete(key);
   else        diasBloqueados.add(key);
 
@@ -437,14 +413,24 @@ async function handleToggleBloqueo(key) {
   renderMiniCal();
   toast(estaba ? formatDate(key) + " reactivado ✓" : formatDate(key) + " bloqueado ⛔", estaba ? "success" : "");
 
-  if (CONFIG.sheetURL) await toggleBloqueoAPI(key, estaba);
+  // 2. Persiste en Google Sheets via POST
+  if (CONFIG.sheetURL) {
+    var res = await apiPOST({ action: "toggleBloqueo", dateKey: key, bloqueado: estaba });
+    if (!res || !res.ok) {
+      // Si falla, revertir y avisar
+      if (estaba) diasBloqueados.add(key);
+      else        diasBloqueados.delete(key);
+      renderCalendar(); renderDiasBloqueados(); renderMiniCal();
+      toast("Error al guardar. Intenta de nuevo.", "error");
+    }
+  }
 }
 
 function renderDiasBloqueados() {
-  const wrap = document.getElementById("diasBloqueadosWrap");
+  var wrap = document.getElementById("diasBloqueadosWrap");
   if (!wrap) return;
-  const hoy   = getDateKey(new Date());
-  const lista = Array.from(diasBloqueados).filter(function(k) { return k >= hoy; }).sort();
+  var hoy  = getDateKey(new Date());
+  var lista = Array.from(diasBloqueados).filter(function(k) { return k >= hoy; }).sort();
   if (!lista.length) {
     wrap.innerHTML = '<p class="empty-state" style="font-size:13px;">Ningún día bloqueado próximamente.</p>';
     return;
@@ -456,86 +442,74 @@ function renderDiasBloqueados() {
 }
 
 function renderMiniCal() {
-  const grid  = document.getElementById("miniCalGrid");
-  const label = document.getElementById("miniCalLabel");
+  var grid  = document.getElementById("miniCalGrid");
+  var label = document.getElementById("miniCalLabel");
   if (!grid || !label) return;
   grid.innerHTML = "";
 
-  const y   = viewDate.getFullYear();
-  const mo  = viewDate.getMonth();
-  const today = new Date(); today.setHours(0, 0, 0, 0);
+  var y   = viewDate.getFullYear();
+  var mo  = viewDate.getMonth();
+  var today = new Date(); today.setHours(0,0,0,0);
   label.textContent = MESES[mo] + " " + y;
 
-  const firstDay    = new Date(y, mo, 1).getDay();
-  const daysInMonth = new Date(y, mo + 1, 0).getDate();
+  var firstDay    = new Date(y, mo, 1).getDay();
+  var daysInMonth = new Date(y, mo+1, 0).getDate();
 
-  for (let i = 0; i < firstDay; i++) {
-    const el = document.createElement("div");
-    el.className = "mini-cal-day empty";
-    grid.appendChild(el);
+  for (var i = 0; i < firstDay; i++) {
+    var e2 = document.createElement("div"); e2.className = "mini-cal-day empty"; grid.appendChild(e2);
   }
-
-  for (let d = 1; d <= daysInMonth; d++) {
-    const date = new Date(y, mo, d);
-    const key  = getDateKey(date);
-    const el   = document.createElement("div");
-    el.textContent = d;
-    el.className = "mini-cal-day";
-    const noLabora = getSlotsForDay(date.getDay()).length === 0;
-    if (date < today || noLabora) {
-      el.classList.add("mini-past");
-    } else {
-      if (diasBloqueados.has(key)) el.classList.add("mini-bloq");
-      el.title = diasBloqueados.has(key) ? "Clic para reactivar" : "Clic para bloquear";
-      el.addEventListener("click", function() { handleToggleBloqueo(key); });
-    }
-    grid.appendChild(el);
+  for (var d = 1; d <= daysInMonth; d++) {
+    (function(day) {
+      var date = new Date(y, mo, day);
+      var key  = getDateKey(date);
+      var el   = document.createElement("div");
+      el.textContent = day; el.className = "mini-cal-day";
+      var noLabora = getSlotsForDay(date.getDay()).length === 0;
+      if (date < today || noLabora) {
+        el.classList.add("mini-past");
+      } else {
+        if (diasBloqueados.has(key)) el.classList.add("mini-bloq");
+        el.title = diasBloqueados.has(key) ? "Clic para reactivar" : "Clic para bloquear";
+        el.addEventListener("click", function() { handleToggleBloqueo(key); });
+      }
+      grid.appendChild(el);
+    })(d);
   }
 }
 
-// Navegación mini-cal
 document.getElementById("miniPrevMonth").addEventListener("click", function() {
-  viewDate.setMonth(viewDate.getMonth() - 1);
-  renderCalendar();
-  renderMiniCal();
+  viewDate.setMonth(viewDate.getMonth() - 1); renderCalendar(); renderMiniCal();
 });
 document.getElementById("miniNextMonth").addEventListener("click", function() {
-  viewDate.setMonth(viewDate.getMonth() + 1);
-  renderCalendar();
-  renderMiniCal();
+  viewDate.setMonth(viewDate.getMonth() + 1); renderCalendar(); renderMiniCal();
 });
 
 // ╔══════════════════════════════════════════════════════╗
-// ║  LISTA DE CITAS (panel Diana)                       ║
+// ║  LISTA DE CITAS                                     ║
 // ╚══════════════════════════════════════════════════════╝
 function renderAppointments() {
   if (!isLoggedIn) return;
-  const list = document.getElementById("appointmentsList");
+  var list = document.getElementById("appointmentsList");
   if (!list) return;
-
   if (!appointments.length) {
-    list.innerHTML = '<p class="empty-state">Aún no hay citas agendadas.</p>';
-    return;
+    list.innerHTML = '<p class="empty-state">Aún no hay citas agendadas.</p>'; return;
   }
-
-  const sorted = appointments.slice().sort(function(a, b) {
-    return (String(a.fecha) + String(a.hora)).localeCompare(String(b.fecha) + String(b.hora));
+  var sorted = appointments.slice().sort(function(a,b) {
+    return (String(a.fecha)+String(a.hora)).localeCompare(String(b.fecha)+String(b.hora));
   });
-
-  const hoy = getDateKey(new Date());
-  const up   = sorted.filter(function(a) { return String(a.fecha) >= hoy; });
-  const past = sorted.filter(function(a) { return String(a.fecha) < hoy; });
-
-  let html = "";
+  var hoy  = getDateKey(new Date());
+  var up   = sorted.filter(function(a) { return String(a.fecha) >= hoy; });
+  var past = sorted.filter(function(a) { return String(a.fecha) < hoy; });
+  var html = "";
   if (up.length)   { html += '<p class="appt-section-label">Próximas citas (' + up.length + ')</p>'; html += up.map(apptCard).join(""); }
-  if (past.length) { html += '<p class="appt-section-label muted">Anteriores (' + past.length + ')</p>'; html += past.map(function(a) { return apptCard(a, true); }).join(""); }
+  if (past.length) { html += '<p class="appt-section-label muted">Anteriores (' + past.length + ')</p>'; html += past.map(function(a){ return apptCard(a,true); }).join(""); }
   list.innerHTML = html;
 }
 
 function apptCard(a, isPast) {
-  const cat = a.categoria === "fisio" ? "Fisioterapia" : "Laminado & Rizado";
-  const cls = a.categoria === "estetica" ? "beauty" : "";
-  const tel = String(a.tel || "").replace(/\D/g, "");
+  var cat = a.categoria === "fisio" ? "Fisioterapia" : "Laminado & Rizado";
+  var cls = a.categoria === "estetica" ? "beauty" : "";
+  var tel = String(a.tel || "").replace(/\D/g,"");
   return '<div class="appt-item' + (isPast ? ' past-item' : '') + '">' +
     '<div class="appt-info">' +
       '<p class="appt-name">' + a.nombre + ' <span class="appt-cat ' + cls + '">' + cat + '</span></p>' +
@@ -555,48 +529,40 @@ function apptCard(a, isPast) {
 
 async function borrarCita(id) {
   if (!confirm("¿Eliminar esta cita?")) return;
-  if (CONFIG.sheetURL) await eliminarCitaAPI(id);
+  if (CONFIG.sheetURL) {
+    var res = await apiPOST({ action: "deleteCita", id: String(id) });
+    if (!res || !res.ok) { toast("Error al eliminar. Intenta de nuevo.", "error"); return; }
+  }
   appointments = appointments.filter(function(a) { return a.id !== id; });
-  renderAppointments();
-  renderCalendar();
-  setNextSlot();
+  renderAppointments(); renderCalendar(); setNextSlot();
   toast("Cita eliminada.");
 }
 
 // ╔══════════════════════════════════════════════════════╗
-// ║  NAV, FECHAS, INICIO                               ║
+// ║  NAV / FECHAS / INICIO                              ║
 // ╚══════════════════════════════════════════════════════╝
 document.getElementById("hamburger").addEventListener("click", function() {
   document.querySelector(".nav-links").classList.toggle("open");
 });
 
-// Fecha mínima = hoy
-var hoyStr = getDateKey(new Date());
 var fechaInput = document.getElementById("fecha");
-fechaInput.min = hoyStr;
+fechaInput.min = getDateKey(new Date());
 fechaInput.addEventListener("change", function() {
-  var parts = this.value.split("-");
-  if (parts.length === 3) {
-    selectDay(new Date(+parts[0], +parts[1] - 1, +parts[2]), this.value);
-  }
+  var p = this.value.split("-");
+  if (p.length === 3) selectDay(new Date(+p[0], +p[1]-1, +p[2]), this.value);
 });
 
-// Navegación calendario público
 document.getElementById("prevMonth").addEventListener("click", function() {
-  viewDate.setMonth(viewDate.getMonth() - 1);
-  renderCalendar();
+  viewDate.setMonth(viewDate.getMonth()-1); renderCalendar();
 });
 document.getElementById("nextMonth").addEventListener("click", function() {
-  viewDate.setMonth(viewDate.getMonth() + 1);
-  renderCalendar();
+  viewDate.setMonth(viewDate.getMonth()+1); renderCalendar();
 });
 
 // Refresco automático cada 90 segundos
-setInterval(function() {
-  if (CONFIG.sheetURL) cargarDatos();
-}, 90000);
+setInterval(function() { if (CONFIG.sheetURL) cargarDatos(); }, 90000);
 
-// INICIO — renderiza calendario inmediatamente, luego carga datos de Sheets
+// INICIO: calendario inmediato, luego carga Sheets
 renderCalendar();
 setNextSlot();
 cargarDatos();
