@@ -4,7 +4,7 @@
 const CONFIG = {
   nombreFisio : "Diana Gisel",
   negocio     : "DG Bienestar y Belleza",
-  whatsapp    : "523312345678",  // ← número real de Diana (52 + 10 dígitos)
+  whatsapp    : "523112685690",  // ← número real de Diana (52 + 10 dígitos)
   duracionMin : 60,
   pin         : "0922",
   // ↓ Pega aquí la URL del Web App de Google Apps Script
