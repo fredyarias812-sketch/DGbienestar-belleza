@@ -85,16 +85,13 @@ function jsonpGET(params) {
 
 // POST con no-cors: no recibe respuesta pero SÍ escribe en Sheets
 function nocorsPOST(payload) {
-  return new Promise(function(resolve) {
-    if (!CONFIG.sheetURL) { resolve(null); return; }
-    fetch(CONFIG.sheetURL, {
-      method: "POST",
-      mode  : "no-cors",   // bypasea CORS — no recibimos respuesta pero el POST llega
-      body  : JSON.stringify(payload),
-    })
-    .then(function() { resolve({ ok: true }); })
-    .catch(function(e) { console.warn("POST error:", e); resolve(null); });
-  });
+  // Usa JSONP para escrituras — funciona sin CORS y SÍ confirma que llegó
+  var params = { action: payload.action };
+  if (payload.cita)      params.cita      = JSON.stringify(payload.cita);
+  if (payload.id)        params.id        = String(payload.id);
+  if (payload.dateKey)   params.dateKey   = payload.dateKey;
+  if (payload.bloqueado !== undefined) params.bloqueado = String(payload.bloqueado);
+  return jsonpGET(params);
 }
 
 async function cargarDatos() {
@@ -300,10 +297,20 @@ document.getElementById("apptForm").addEventListener("submit",async function(e){
   renderCalendar(); setNextSlot();
   if(isLoggedIn) renderAppointments();
 
-  // 2. Guardar en Sheets, luego recargar datos frescos para confirmar
+  // 2. Guardar en Sheets via JSONP (confirma que llegó) y recargar
   if(CONFIG.sheetURL){
-    await nocorsPOST({action:"addCita",cita:cita});
-    setTimeout(function(){ cargarDatos(); }, 2000);
+    var res = await nocorsPOST({action:"addCita",cita:cita});
+    if(res && res.ok){
+      // Recargar datos frescos de Sheets para confirmar en todos los dispositivos
+      await cargarDatos();
+    } else {
+      // Si falló, recargar de todas formas para mostrar estado real
+      await cargarDatos();
+      toast("Revisa tu conexión e intenta de nuevo.","error");
+      appointments = appointments.filter(function(a){ return a.id !== cita.id; });
+      btn.disabled=false; btn.textContent="Confirmar cita vía WhatsApp →";
+      return;
+    }
   }
 
   window.open("https://wa.me/"+CONFIG.whatsapp+"?text="+buildWAMessage(cita),"_blank");
