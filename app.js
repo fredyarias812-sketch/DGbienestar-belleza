@@ -10,13 +10,13 @@ const CONFIG = {
   // ↓ Pega aquí la URL del Web App de Google Apps Script
   sheetURL    :"https://script.google.com/macros/s/AKfycbyDWNlJ9JukghKlBc4xlUiSHNcDvuoVygEBNkDSElQXDFBcOp-rjEJqPc7yEpFayLwudQ/exec",
   horarios: {
-    0: [9,  20],
+    0: [9,  14],   // Domingo   9am-2pm
     1: [16, 20],
     2: [16, 20],
     3: [16, 20],
     4: [16, 20],
     5: [16, 20],
-    6: [9,  20],
+    6: [15, 19],   // Sabado    3pm-7pm
   },
 };
 
