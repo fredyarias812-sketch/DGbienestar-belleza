@@ -295,13 +295,16 @@ document.getElementById("apptForm").addEventListener("submit",async function(e){
 
   var cita={id:Date.now(),nombre:nombre,tel:tel,categoria:categoria,servicio:servicio,fecha:fecha,hora:hora,motivo:motivo,creada:new Date().toISOString()};
 
-  // Actualizar UI inmediatamente
+  // 1. Actualizar UI local inmediatamente
   appointments.push(cita);
   renderCalendar(); setNextSlot();
   if(isLoggedIn) renderAppointments();
 
-  // Guardar en Sheets (no-cors: el POST llega pero no recibimos confirmación)
-  if(CONFIG.sheetURL) await nocorsPOST({action:"addCita",cita:cita});
+  // 2. Guardar en Sheets, luego recargar datos frescos para confirmar
+  if(CONFIG.sheetURL){
+    await nocorsPOST({action:"addCita",cita:cita});
+    setTimeout(function(){ cargarDatos(); }, 2000);
+  }
 
   window.open("https://wa.me/"+CONFIG.whatsapp+"?text="+buildWAMessage(cita),"_blank");
   toast("¡Cita registrada! ✓","success");
